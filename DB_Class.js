@@ -4,26 +4,26 @@ class DB {
   }
 
   async getDepartments() {
-    let query = "SELECT * FROM departments";
+    let query = "SELECT * FROM department";
     return this.doQuery(query);
   }
 
   async getRoles() {
-    let query = "SELECT * FROM roles";
+    let query = "SELECT * FROM role";
     return this.doQuery(query);
   }
   async getEmployees() {
-    let query = "SELECT * FROM employees";
+    let query = "SELECT * FROM employee";
     return this.doQuery(query);
   }
   async getManagers() {
     let query =
-      "SELECT employees.id, employees.first_name, employees.last_name, employees.department_id FROM employees JOIN roles ON employees.role_id = roles.id WHERE roles.title = 'manager'";
+      "SELECT distinct CONCAT(ee.first_name,' ',ee.last_name) `manager` FROM employee e JOIN role r ON  e.role_id = r.id JOIN employee ee ON ee.id = e.manager_id";
     return this.doQuery(query);
   }
 
   async createDepartment(departmentNameArray) {
-    let query = "INSERT INTO departments SET ?";
+    let query = "INSERT INTO department SET ?";
     return this.doQueryParams(query, departmentNameArray);
   }
 

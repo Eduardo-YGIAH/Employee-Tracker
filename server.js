@@ -26,18 +26,19 @@ con.connect(function(err) {
   (async function initializeInquirer() {
     let currentDepartments = await DBModel.getDepartments();
     let currentRoles = await DBModel.getRoles();
-    let currentEmployees = await DBModel.getEmployees();
-    let managers = await DBModel.getManagers();
-    let managersList = managers.map(manager => {
+    let rolesList = currentRoles.map(role => {
       return {
-        name: `${manager.first_name} ${manager.last_name}`
+        id: role.id,
+        name: role.title
       };
     });
+    let currentEmployees = await DBModel.getEmployees();
 
-    // let juniorDevelopers = await DBModel.getManagers();
-    // console.log(currentDepartments);
-    // console.log(currentRoles);
-    // console.log(currentEmployees);
+    let employeeList = currentEmployees.map(employee => {
+      return {
+        name: `${employee.first_name} ${employee.last_name}`
+      };
+    });
 
     inquirer
       .prompt([
@@ -66,29 +67,29 @@ con.connect(function(err) {
             {
               name: "View Employees"
             },
+            {
+              name: "View Employees by Manager"
+            },
+            {
+              name: "View the total utilized budget by department"
+            },
             new inquirer.Separator(" = EDIT EXISTING ="),
             {
-              name: "Change Department name"
+              name: "Update employee role"
             },
             {
-              name: "Change Role name"
-            },
-            {
-              name: "Change Role from Employee"
-            },
-            {
-              name: "Change Manager from Employee"
-            },
-            new inquirer.Separator(" = DELETE EXISTING = "),
-            {
-              name: "Delete Department"
-            },
-            {
-              name: "Delete Role"
-            },
-            {
-              name: "Delete Employee"
+              name: "Update employee manager"
             }
+            // new inquirer.Separator(" = DELETE EXISTING = "),
+            // {
+            //   name: "Delete Department"
+            // },
+            // {
+            //   name: "Delete Role"
+            // },
+            // {
+            //   name: "Delete Employee"
+            // }
           ]
         },
         {
@@ -184,27 +185,6 @@ con.connect(function(err) {
         },
         {
           type: "list",
-          name: "employee_department",
-          message: "To what department will this employee be assigned?",
-          choices: currentDepartments.map(department => {
-            return {
-              id: department.id,
-              name: department.name
-            };
-          }),
-          when: function(answer) {
-            return answer.employee_lastName;
-          },
-          validate: function(answer) {
-            if (!answer) {
-              return `You need to assign a department to the employee.`;
-            }
-
-            return true;
-          }
-        },
-        {
-          type: "list",
           name: "employee_role",
           message: "Choose a role for this employee:",
           choices: currentRoles.map(role => {
@@ -214,7 +194,7 @@ con.connect(function(err) {
             };
           }),
           when: function(answer) {
-            return answer.employee_department;
+            return answer.employee_lastName;
           },
           validate: function(answer) {
             if (!answer) {
@@ -232,7 +212,7 @@ con.connect(function(err) {
             {
               name: "Assign later or no superviser"
             },
-            ...managersList
+            ...employeeList
           ],
           when: function(answer) {
             return answer.employee_role;
@@ -240,36 +220,42 @@ con.connect(function(err) {
         },
         {
           type: "list",
-          name: "old_department_name",
-          message: "What department you would like to change the name?",
-          choices: currentDepartments,
+          name: "update_role",
+          message: "Choose the employee from you would like to update the role:",
+          choices: employeeList,
           when: function(answer) {
-            return answer.hr_request === "Change Department name";
-          },
-          validate: function(answer) {
-            if (!answer) {
-              return `You need to select a department to change the name.`;
-            }
-
-            return true;
+            return answer.hr_request === "Update employee role";
           }
         },
         {
-          type: "input",
-          name: "new_department_name",
-          message: "Type the new name for the department:",
+          type: "list",
+          name: "select_new_role",
+          message: "Select the new role for the employee:",
+          choices: rolesList,
           when: function(answer) {
-            return answer.old_department_name;
-          },
-          validate: function(answer) {
-            if (!answer) {
-              return `You need to provide a new name to the department.`;
-            }
-
-            return true;
+            return answer.update_role;
+          }
+        },
+        {
+          type: "list",
+          name: "pick_employee_to_update_manager",
+          message: "Select the employee to update the manager:",
+          choices: employeeList,
+          when: function(answer) {
+            return answer.hr_request === "Update employee manager";
+          }
+        },
+        {
+          type: "list",
+          name: "select_new_manager",
+          message: "Select the new manager for the employee:",
+          choices: employeeList,
+          when: function(answer) {
+            return answer.pick_employee_to_update_manager;
           }
         }
       ])
+      // END OF QUESTIONS
       .then(answer => {
         // CREATE A NEW DEPARTMENT
         if (answer.hr_request === "Create a new Department") {
@@ -279,7 +265,7 @@ con.connect(function(err) {
               .toLowerCase()
               .trim()
           );
-          con.query("INSERT INTO departments SET ?", newDepartment, err => {
+          con.query("INSERT INTO department SET ?", newDepartment, err => {
             if (err) {
               throw err;
             }
@@ -295,7 +281,7 @@ con.connect(function(err) {
               .trim()
           };
 
-          con.query("SELECT id FROM departments WHERE ?", criteria, (err, res) => {
+          con.query("SELECT id FROM department WHERE ?", criteria, (err, res) => {
             if (err) {
               throw err;
             }
@@ -306,7 +292,7 @@ con.connect(function(err) {
               .toLowerCase()
               .trim();
             const newRole = new Role(newRoleTitle, Number(answer.role_salary.trim()), departmentId);
-            con.query("INSERT INTO roles SET ?", newRole, err => {
+            con.query("INSERT INTO role SET ?", newRole, err => {
               if (err) {
                 throw err;
               }
@@ -314,7 +300,7 @@ con.connect(function(err) {
               initializeInquirer();
             });
           });
-          // ADD A NEW EMPLOYEE - constructor(firstName, lastName, roleId, departmentId, managerId)
+          // ADD A NEW EMPLOYEE - constructor(firstName, lastName, roleId, managerId)
         } else if (answer.hr_request === "Add an Employee") {
           console.log(answer);
           const first_name = answer.employee_firstName
@@ -332,81 +318,68 @@ con.connect(function(err) {
               .toLowerCase()
               .trim()
           };
-          con.query("SELECT id FROM roles WHERE ?", criteriaRole, (err, res) => {
+          con.query("SELECT id FROM role WHERE ?", criteriaRole, (err, res) => {
             if (err) {
               throw err;
             }
             const role_id = res[0].id;
-            // GET DEPARTMENT ID FROM DEPARTMENT NAME
-            const criteriaDepartment = {
-              name: answer.employee_department
+
+            // VERIFY IF EMPLOYEE HAS MANAGER ASSIGNED
+            if (answer.employee_supervisor === "Assign later or no superviser") {
+              //CREATE NEW EMPLOYEE OBJECT WITH NO MANAGER ASSIGNED
+              const newEmployeeObj = new Employee(first_name, last_name, role_id);
+              con.query("INSERT INTO employee SET ?", newEmployeeObj, (err, res) => {
+                if (err) {
+                  throw err;
+                }
+                console.info("New employee added to database.");
+
+                initializeInquirer();
+              });
+            } else {
+              // IF HAS MANAGER GET MANAGER ID FROM MANAGER NAME
+              const firstName = answer.employee_supervisor
                 .toString()
                 .toLowerCase()
                 .trim()
-            };
-            con.query("SELECT id FROM departments WHERE ?", criteriaDepartment, (err, res) => {
-              if (err) {
-                throw err;
-              }
-              const department_id = res[0].id;
-              console.log(first_name, last_name, role_id, department_id);
-              // VERIFY IF EMPLOYEE HAS MANAGER ASSIGNED
-
-              if (answer.employee_supervisor === "Assign later or no superviser") {
-                //CREATE NEW EMPLOYEE OBJECT WITH NO MANAGER ASSIGNED
-                const newEmployeeObj = new Employee(first_name, last_name, role_id, department_id);
-                con.query("INSERT INTO employees SET ?", newEmployeeObj, (err, res) => {
+                .split(" ")[0];
+              const lastName = answer.employee_supervisor
+                .toString()
+                .toLowerCase()
+                .trim()
+                .split(" ")[1];
+              const criteriaManagerId1 = {
+                first_name: firstName
+              };
+              const criteriaManagerId2 = {
+                last_name: lastName
+              };
+              con.query(
+                "SELECT id FROM employee WHERE ? AND ? LIMIT 1",
+                [criteriaManagerId1, criteriaManagerId2],
+                (err, res) => {
                   if (err) {
                     throw err;
                   }
-                  console.info("New employee added to database.");
-
-                  initializeInquirer();
-                });
-              } else {
-                // IF HAS MANAGER GET MANAGER ID FROM MANAGER NAME
-                const firstName = answer.employee_supervisor
-                  .toString()
-                  .toLowerCase()
-                  .trim()
-                  .split(" ")[0];
-                const lastName = answer.employee_supervisor
-                  .toString()
-                  .toLowerCase()
-                  .trim()
-                  .split(" ")[1];
-                const criteriaManagerId1 = {
-                  first_name: firstName
-                };
-                const criteriaManagerId2 = {
-                  last_name: lastName
-                };
-                con.query(
-                  "SELECT id FROM employees WHERE ? AND ?",
-                  [criteriaManagerId1, criteriaManagerId2],
-                  (err, res) => {
+                  const manager_id = res[0].id;
+                  //CREATE NEW EMPLOYEE OBJECT WITH MANAGER ASSIGNED
+                  const newEmployeeObj = new Employee(first_name, last_name, role_id, manager_id);
+                  console.log(newEmployeeObj);
+                  con.query("INSERT INTO employee SET ?", newEmployeeObj, (err, res) => {
                     if (err) {
                       throw err;
                     }
-                    const manager_id = res[0].id;
-                    //CREATE NEW EMPLOYEE OBJECT WITH MANAGER ASSIGNED
-                    const newEmployeeObj = new Employee(first_name, last_name, role_id, department_id, manager_id);
-                    console.log(newEmployeeObj);
-                    con.query("INSERT INTO employees SET ?", newEmployeeObj, (err, res) => {
-                      if (err) {
-                        throw err;
-                      }
-                      console.info("New employee added to database.");
+                    console.info("New employee added to database.");
 
-                      initializeInquirer();
-                    });
-                  }
-                );
-              }
-            });
+                    initializeInquirer();
+                  });
+                }
+              );
+            }
           });
+          // VIEW DEPARTMENTS
         } else if (answer.hr_request === "View Departments") {
-          con.query("SELECT * FROM departments", (err, res) => {
+          con.query("SELECT * FROM department", (err, res) => {
             if (err) {
               throw err;
             }
@@ -414,8 +387,9 @@ con.connect(function(err) {
             console.table(res);
             initializeInquirer();
           });
+          // VIEW ROLES
         } else if (answer.hr_request === "View Roles") {
-          con.query("SELECT * FROM roles", (err, res) => {
+          con.query("SELECT * FROM role", (err, res) => {
             if (err) {
               throw err;
             }
@@ -423,40 +397,155 @@ con.connect(function(err) {
             console.table(res);
             initializeInquirer();
           });
+          // VIEW EMPLOYEES DETAILS - ORDERED BY DEPARTMENT
         } else if (answer.hr_request === "View Employees") {
-          con.query("SELECT * FROM employees", (err, res) => {
-            if (err) {
-              throw err;
-            }
-            console.log("Employees:");
-            console.table(res);
-            initializeInquirer();
-          });
-        } else if (answer.hr_request === "Change Department name") {
-          // GET ID FROM DEPARTMENT OLD NAME
-
-          const criteriaOldDepartmentName = {
-            name: answer.old_department_name
-          };
-          con.query("SELECT id FROM departments WHERE ?", criteriaOldDepartmentName, (err, res) => {
-            if (err) {
-              throw err;
-            }
-            const oldDepartmentId = {
-              id: res[0].id
-            };
-            // GET NEW NAME FOR THE DEPARTMENT
-            const criteriaNewDepartmentName = {
-              name: answer.new_department_name.toLowerCase().trim()
-            };
-
-            // UPDATE DEPARTMENT NAME WITH NEW PARAMATERS
-            con.query("UPDATE departments SET ? WHERE ?", [criteriaNewDepartmentName, oldDepartmentId], (err, res) => {
+          con.query(
+            "SELECT e.id, e.first_name, e.last_name, r.title, r.salary, d.name AS department, CONCAT(ee.first_name,' ',ee.last_name) `manager` FROM employee e JOIN role r ON  e.role_id = r.id JOIN department d ON r.department_id = d.id JOIN employee ee ON ee.id = e.manager_id UNION SELECT eee.id, eee.first_name, eee.last_name, rr.title, rr.salary, dd.name AS department, eee.manager_id AS manager FROM employee eee JOIN role rr ON  eee.role_id = rr.id JOIN department dd ON rr.department_id = dd.id WHERE eee.manager_id IS NULL ORDER BY department",
+            (err, res) => {
               if (err) {
                 throw err;
               }
-              console.info("Department name has been changed.");
+              console.log("Employees:");
+              console.table(res);
               initializeInquirer();
+            }
+          );
+          // VIEW EMPLOYEES BY MANAGER
+        } else if (answer.hr_request === "View Employees by Manager") {
+          con.query(
+            "SELECT  CONCAT(ee.first_name,' ',ee.last_name) `manager`, d.name AS department, e.id, e.first_name, e.last_name, r.title, r.salary FROM employee e JOIN role r ON  e.role_id = r.id JOIN department d ON r.department_id = d.id JOIN employee ee ON ee.id = e.manager_id ORDER BY manager",
+            (err, res) => {
+              if (err) {
+                throw err;
+              }
+              console.log("Employees:");
+              console.table(res);
+              initializeInquirer();
+            }
+          );
+          // VIEW DEPARTEMENTS BUDGET
+        } else if (answer.hr_request === "View the total utilized budget by department") {
+          con.query(
+            "SELECT d.name AS department, ro.budget AS spending_budget FROM department d JOIN (SELECT r.department_id as id, SUM(r.salary) AS budget FROM role r JOIN employee e WHERE e.role_id = r.id GROUP BY id) ro WHERE d.id = ro.id",
+            (err, res) => {
+              if (err) {
+                throw err;
+              }
+              console.log("Employees:");
+              console.table(res);
+              initializeInquirer();
+            }
+          );
+          // UPDATE AN EMPLOYEE ROLE
+        } else if (answer.hr_request === "Update employee role") {
+          const firstName = answer.update_role
+            .toString()
+            .toLowerCase()
+            .trim()
+            .split(" ")[0];
+          const lastName = answer.update_role
+            .toString()
+            .toLowerCase()
+            .trim()
+            .split(" ")[1];
+          const criteriaEmployeeId1 = {
+            first_name: firstName
+          };
+          const criteriaEmployeeId2 = {
+            last_name: lastName
+          };
+          con.query("SELECT id FROM employee WHERE ? AND ?", [criteriaEmployeeId1, criteriaEmployeeId2], (err, res) => {
+            if (err) {
+              throw err;
+            }
+            const employeeId = Number(res[0].id);
+            const criteriaForNewRoleId = {
+              title: answer.select_new_role
+            };
+            con.query("SELECT id FROM role WHERE ?", criteriaForNewRoleId, (err, res) => {
+              if (err) {
+                throw err;
+              }
+              const roleId = Number(res[0].id);
+              const criteria = [
+                {
+                  role_id: roleId
+                },
+                {
+                  id: employeeId
+                }
+              ];
+              con.query("UPDATE employee SET ? WHERE ?", criteria, (err, res) => {
+                if (err) {
+                  throw err;
+                }
+                console.info("Role sucessfully updated");
+                initializeInquirer();
+              });
+            });
+          });
+        } else if (answer.hr_request === "Update employee manager") {
+          console.log("THIS IS THE ANSWER I NEED: " + answer.pick_employee_to_update_manager);
+          const firstName = answer.pick_employee_to_update_manager
+            .toString()
+            .toLowerCase()
+            .trim()
+            .split(" ")[0];
+          const lastName = answer.pick_employee_to_update_manager
+            .toString()
+            .toLowerCase()
+            .trim()
+            .split(" ")[1];
+          const criteriaEmployeeId1 = {
+            first_name: firstName
+          };
+          const criteriaEmployeeId2 = {
+            last_name: lastName
+          };
+          con.query("SELECT id FROM employee WHERE ? AND ?", [criteriaEmployeeId1, criteriaEmployeeId2], (err, res) => {
+            if (err) {
+              throw err;
+            }
+            const employeeId = Number(res[0].id);
+            console.log("===================");
+            console.log("I AM LOOKING FOR THIS: " + answer.select_new_manager);
+            console.log("===================");
+            const managerFirstName = answer.select_new_manager
+              .toString()
+              .toLowerCase()
+              .trim()
+              .split(" ")[0];
+            const managerLastName = answer.select_new_manager
+              .toString()
+              .toLowerCase()
+              .trim()
+              .split(" ")[1];
+            const criteriaManagerId1 = {
+              first_name: managerFirstName
+            };
+            const criteriaManagerId2 = {
+              last_name: managerLastName
+            };
+            con.query("SELECT id FROM employee WHERE ? AND ?", [criteriaManagerId1, criteriaManagerId2], (err, res) => {
+              if (err) {
+                throw err;
+              }
+              const managerId = Number(res[0].id);
+              const criteria = [
+                {
+                  manager_id: managerId
+                },
+                {
+                  id: employeeId
+                }
+              ];
+              con.query("UPDATE employee SET ? WHERE ?", criteria, (err, res) => {
+                if (err) {
+                  throw err;
+                }
+                console.info("Manager sucessfully updated for the selected employee.");
+                initializeInquirer();
+              });
             });
           });
         } else {
