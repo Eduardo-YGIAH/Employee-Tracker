@@ -89,6 +89,13 @@ class DB {
     return this.doQuery(query);
   }
 
+  async getUtilizedBudgetByDepartement() {
+    //IN USE
+    let query =
+      "SELECT d.name AS department, ro.budget AS spending_budget FROM department d JOIN (SELECT r.department_id as id, SUM(r.salary) AS budget FROM role r JOIN employee e WHERE e.role_id = r.id GROUP BY id) ro WHERE d.id = ro.id";
+    return this.doQuery(query);
+  }
+
   async getManagers() {
     let query =
       "SELECT distinct CONCAT(ee.first_name,' ',ee.last_name) `manager` FROM employee e JOIN role r ON  e.role_id = r.id JOIN employee ee ON ee.id = e.manager_id";

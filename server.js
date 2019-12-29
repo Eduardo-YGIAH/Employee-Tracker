@@ -209,6 +209,18 @@ con.connect(function(err) {
               }
             })();
             break;
+          case "View the total utilized budget by department":
+            (async () => {
+              try {
+                const utilizedBudgetByDepartement = await DBModel.getUtilizedBudgetByDepartement();
+                console.log(" ");
+                console.table("UTILIZED BUDGET BY DEPARTMENT:", utilizedBudgetByDepartement);
+                initializeInquirer();
+              } catch (err) {
+                console.log(err);
+              }
+            })();
+            break;
         }
       })
       .catch(err => console.log(err));
