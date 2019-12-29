@@ -70,16 +70,16 @@ module.exports = { InputTextQuestion, InputNumberQuestion, ListQuestion };
 
 // exports.new_role = [
 //   new InputTextQuestion("role_title", "Give a title to the new Role.", "You need to give a title to the role."),
-new InputNumberQuestion(
-  "role_salary",
-  "Set a salary to the new Role.",
-  "You need to provide an anual salary to the new Role as a decimal number. Note: £10,000.00 = 1000000"
-),
-  new ListQuestion("role_department", "To what department does this role belongs to?", [
-    "option1",
-    "option2",
-    "option3"
-  ]);
+// new InputNumberQuestion(
+//   "role_salary",
+//   "Set a salary to the new Role.",
+//   "You need to provide an anual salary to the new Role as a decimal number. Note: £10,000.00 = 1000000"
+// ),
+//   new ListQuestion("role_department", "To what department does this role belongs to?", [
+//     "option1",
+//     "option2",
+//     "option3"
+//   ]);
 // {
 //   type: "input",
 //   name: "role_title",

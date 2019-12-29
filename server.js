@@ -27,6 +27,8 @@ con.connect(function(err) {
 
   (async function initializeInquirer() {
     const currentDepartments = await DBModel.getDepartments();
+    const currentRoles = await DBModel.getRoles();
+    const currentEmployees = await DBModel.getEmployees();
     inquirer
       .prompt([new ListQuestion("initial_question", "What would you like to do?", initialChoices)])
       .then(answer => {
@@ -94,6 +96,82 @@ con.connect(function(err) {
                   }
                 })();
                 initializeInquirer();
+              })
+              .catch(err => console.log(err));
+            break;
+          case "Add an Employee":
+            const rolesChoice = currentRoles.map(role => {
+              return {
+                id: role.id,
+                name: role.title
+              };
+            });
+            const managerChoice = currentEmployees.map(employee => {
+              return {
+                id: employee.id,
+                name: `${employee.first_name} ${employee.last_name}`
+              };
+            });
+            inquirer
+              .prompt([
+                new InputTextQuestion(
+                  "employee_firstName",
+                  "Type the new employee's first name:",
+                  "You need to provide the first name of the new employee."
+                ),
+                new InputTextQuestion(
+                  "employee_lastName",
+                  "Type the new employee's last name:",
+                  "You need to provide the last name of the new employee."
+                ),
+                new ListQuestion("employee_role", "Select the employee role:", [...rolesChoice]),
+                new ListQuestion("employee_manager", "Select who will manage this employee:", [
+                  "Does not apply or if you would like to select later.",
+                  ...managerChoice
+                ])
+              ])
+              .then(answer => {
+                (async () => {
+                  try {
+                    const firstName = answer.employee_firstName.toLowerCase().trim();
+                    console.log(firstName);
+                    const lastName = answer.employee_lastName.toLowerCase().trim();
+                    console.log(lastName);
+                    const roleIdCriteria = { title: answer.employee_role.toLowerCase().trim() };
+                    const roleId = await DBModel.getRoleIdFromRoleTitle(roleIdCriteria);
+                    console.log(roleId);
+                    if (answer.employee_manager === "Does not apply or if you would like to select later.") {
+                      const newEmployee = new Employee(firstName, lastName, roleId[0].id);
+                      await DBModel.addEmployee(newEmployee);
+                      const result = await DBModel.getLastEmployeeAdded();
+                      console.log(" ");
+                      console.table("LAST EMPLOYEE ADDED", result);
+                      initializeInquirer();
+                    } else {
+                      const managerIdCriteria1 = {
+                        first_name: answer.employee_manager
+                          .toLowerCase()
+                          .trim()
+                          .split(" ")[0]
+                      };
+                      const managerIdCriteria2 = {
+                        last_name: answer.employee_manager
+                          .toLowerCase()
+                          .trim()
+                          .split(" ")[1]
+                      };
+                      const managerId = await DBModel.getEmployeeIdFromName([managerIdCriteria1, managerIdCriteria2]);
+                      const newEmployee = new Employee(firstName, lastName, roleId[0].id, managerId[0].id);
+                      await DBModel.addEmployee(newEmployee);
+                      const result = await DBModel.getLastEmployeeAdded();
+                      console.log(" ");
+                      console.table("LAST EMPLOYEE ADDED", result);
+                      initializeInquirer();
+                    }
+                  } catch (err) {
+                    console.log(err);
+                  }
+                })();
               })
               .catch(err => console.log(err));
             break;
