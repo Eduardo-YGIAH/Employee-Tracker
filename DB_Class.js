@@ -69,6 +69,13 @@ class DB {
     return this.doQueryParams(query, criteria);
   }
 
+  async getEmployeeInfoFromEmployeeName(criteria) {
+    // IN USE - criteria = [ {e.first_name: "firstName"}, {e.last_name: "lastName"}, {eee.first_name: "firstName"}, {eee.last_name: "lastName"}]
+    let query =
+      "SELECT e.id, e.first_name, e.last_name, r.title, r.salary, d.name AS department, CONCAT(ee.first_name,' ',ee.last_name) `manager` FROM employee e JOIN role r ON  e.role_id = r.id JOIN department d ON r.department_id = d.id JOIN employee ee ON ee.id = e.manager_id WHERE ? AND ? UNION SELECT eee.id, eee.first_name, eee.last_name, rr.title, rr.salary, dd.name AS department, eee.manager_id AS manager FROM employee eee JOIN role rr ON  eee.role_id = rr.id JOIN department dd ON rr.department_id = dd.id WHERE eee.manager_id IS NULL AND ? AND ?";
+    return this.doQueryParams(query, criteria);
+  }
+
   async getLastEmployeeAdded() {
     // IN USE
     let query = "SELECT * FROM employee ORDER BY id DESC LIMIT 1";
@@ -96,6 +103,12 @@ class DB {
     return this.doQuery(query);
   }
 
+  async updateRoleFromEmployee(criteria) {
+    // IN USE
+    let query = "UPDATE employee SET ? WHERE ? AND ?";
+    return this.doQueryParams(query, criteria);
+  }
+
   async getManagers() {
     let query =
       "SELECT distinct CONCAT(ee.first_name,' ',ee.last_name) `manager` FROM employee e JOIN role r ON  e.role_id = r.id JOIN employee ee ON ee.id = e.manager_id";
@@ -109,7 +122,7 @@ class DB {
     let pro = new Promise((resolve, reject) => {
       let query = queryToDo;
       this.db.query(query, function(err, result) {
-        if (err) throw err; // GESTION D'ERREURS
+        if (err) throw err;
         resolve(result);
       });
     });
@@ -121,7 +134,7 @@ class DB {
     let pro = new Promise((resolve, reject) => {
       let query = queryToDo;
       this.db.query(query, array, function(err, result) {
-        if (err) throw err; // GESTION D'ERREURS
+        if (err) throw err;
         resolve(result);
       });
     });

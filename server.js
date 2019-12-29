@@ -29,6 +29,18 @@ con.connect(function(err) {
     const currentDepartments = await DBModel.getDepartments();
     const currentRoles = await DBModel.getRoles();
     const currentEmployees = await DBModel.getEmployees();
+    const employeeChoice = currentEmployees.map(employee => {
+      return {
+        id: employee.id,
+        name: `${employee.first_name} ${employee.last_name}`
+      };
+    });
+    const rolesChoice = currentRoles.map(role => {
+      return {
+        id: role.id,
+        name: role.title
+      };
+    });
     inquirer
       .prompt([new ListQuestion("initial_question", "What would you like to do?", initialChoices)])
       .then(answer => {
@@ -100,18 +112,6 @@ con.connect(function(err) {
               .catch(err => console.log(err));
             break;
           case "Add an Employee":
-            const rolesChoice = currentRoles.map(role => {
-              return {
-                id: role.id,
-                name: role.title
-              };
-            });
-            const managerChoice = currentEmployees.map(employee => {
-              return {
-                id: employee.id,
-                name: `${employee.first_name} ${employee.last_name}`
-              };
-            });
             inquirer
               .prompt([
                 new InputTextQuestion(
@@ -127,19 +127,16 @@ con.connect(function(err) {
                 new ListQuestion("employee_role", "Select the employee role:", [...rolesChoice]),
                 new ListQuestion("employee_manager", "Select who will manage this employee:", [
                   "Does not apply or if you would like to select later.",
-                  ...managerChoice
+                  ...employeeChoice
                 ])
               ])
               .then(answer => {
                 (async () => {
                   try {
                     const firstName = answer.employee_firstName.toLowerCase().trim();
-                    console.log(firstName);
                     const lastName = answer.employee_lastName.toLowerCase().trim();
-                    console.log(lastName);
                     const roleIdCriteria = { title: answer.employee_role.toLowerCase().trim() };
                     const roleId = await DBModel.getRoleIdFromRoleTitle(roleIdCriteria);
-                    console.log(roleId);
                     if (answer.employee_manager === "Does not apply or if you would like to select later.") {
                       const newEmployee = new Employee(firstName, lastName, roleId[0].id);
                       await DBModel.addEmployee(newEmployee);
@@ -220,6 +217,61 @@ con.connect(function(err) {
                 console.log(err);
               }
             })();
+            break;
+          case "Update employee role":
+            inquirer
+              .prompt([
+                new ListQuestion("employee_to_update_role", "Select the employee to update role:", [...employeeChoice]),
+                new ListQuestion("new_role", "Select the new role:", [...rolesChoice])
+              ])
+              .then(answer => {
+                (async () => {
+                  try {
+                    const roleIdCriteria = { title: answer.new_role.toLowerCase().trim() };
+                    const roleId = await DBModel.getRoleIdFromRoleTitle(roleIdCriteria);
+                    const roleCriteria = {
+                      role_id: roleId[0].id
+                    };
+                    const firstNameCriteria = {
+                      first_name: answer.employee_to_update_role
+                        .toLowerCase()
+                        .trim()
+                        .split(" ")[0]
+                    };
+                    const lastNameCriteria = {
+                      last_name: answer.employee_to_update_role
+                        .toLowerCase()
+                        .trim()
+                        .split(" ")[1]
+                    };
+                    await DBModel.updateRoleFromEmployee([roleCriteria, firstNameCriteria, lastNameCriteria]);
+                    const firstNameCriteriaCall1 = {
+                      "e.first_name": firstNameCriteria.first_name
+                    };
+                    const lastNameCriteriaCall1 = {
+                      "e.last_name": lastNameCriteria.last_name
+                    };
+                    const firstNameCriteriaCall2 = {
+                      "eee.first_name": firstNameCriteria.first_name
+                    };
+                    const lastNameCriteriaCall2 = {
+                      "eee.last_name": lastNameCriteria.last_name
+                    };
+                    const result = await DBModel.getEmployeeInfoFromEmployeeName([
+                      firstNameCriteriaCall1,
+                      lastNameCriteriaCall1,
+                      firstNameCriteriaCall2,
+                      lastNameCriteriaCall2
+                    ]);
+                    console.log(" ");
+                    console.table("EMPLOYEE ROLE WAS UPDATED:", result);
+                    initializeInquirer();
+                  } catch (err) {
+                    console.log(err);
+                  }
+                })();
+              })
+              .catch(err => console.log(err));
             break;
         }
       })
