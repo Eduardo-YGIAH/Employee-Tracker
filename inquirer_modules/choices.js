@@ -1,7 +1,8 @@
 const inquirer = require("inquirer");
+// const DB = require("../DB_Class");
 
-const choices = [
-  new inquirer.Separator(" = CREATE NEW = "),
+const initialChoices = [
+  new inquirer.Separator(" = SELCT AN OPTION = "),
   {
     name: "Create a new Department"
   },
@@ -11,7 +12,7 @@ const choices = [
   {
     name: "Add an Employee"
   },
-  new inquirer.Separator(" = VIEW EXISTING = "),
+  //   new inquirer.Separator(" = VIEW EXISTING = "),
   {
     name: "View Departments"
   },
@@ -27,14 +28,14 @@ const choices = [
   {
     name: "View the total utilized budget by department"
   },
-  new inquirer.Separator(" = EDIT EXISTING ="),
+  //   new inquirer.Separator(" = EDIT EXISTING ="),
   {
     name: "Update employee role"
   },
   {
     name: "Update employee manager"
-  }
-  // new inquirer.Separator(" = DELETE EXISTING = "),
+  },
+  new inquirer.Separator(" = END OF OPTIONS = ")
   // {
   //   name: "Delete Department"
   // },
@@ -46,13 +47,4 @@ const choices = [
   // }
 ];
 
-const initial_question = [
-  {
-    type: "list",
-    message: "What would you like to do?",
-    name: "hr_request",
-    choices: choices
-  }
-];
-
-module.exports = initial_question;
+module.exports = initialChoices;

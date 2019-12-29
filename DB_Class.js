@@ -8,10 +8,21 @@ class DB {
     return this.doQuery(query);
   }
 
+  async getDepartment(criteria) {
+    let query = "SELECT * FROM department WHERE ?";
+    return this.doQueryParams(query, criteria);
+  }
+
   async getRoles() {
     let query = "SELECT * FROM role";
     return this.doQuery(query);
   }
+
+  async getRole(criteria) {
+    let query = "SELECT * FROM role WHERE ?";
+    return this.doQueryParams(query, criteria);
+  }
+
   async getEmployees() {
     let query = "SELECT * FROM employee";
     return this.doQuery(query);
@@ -25,6 +36,16 @@ class DB {
   async createDepartment(departmentNameArray) {
     let query = "INSERT INTO department SET ?";
     return this.doQueryParams(query, departmentNameArray);
+  }
+
+  async getDepartmentId(departmentNameArray) {
+    let query = "SELECT id FROM department WHERE ?";
+    return this.doQueryParams(query, departmentNameArray);
+  }
+
+  async addNewRole(roleNameArray) {
+    let query = "INSERT INTO role SET ?";
+    return this.doQueryParams(query, roleNameArray);
   }
 
   //   async getUserById(array) {
