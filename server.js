@@ -175,6 +175,28 @@ con.connect(function(err) {
               })
               .catch(err => console.log(err));
             break;
+          case "View Departments":
+            console.log(" ");
+            console.table("DEPARTMENTS:", currentDepartments);
+            initializeInquirer();
+            break;
+          case "View Roles":
+            console.log(" ");
+            console.table("ROLES:", currentRoles);
+            initializeInquirer();
+            break;
+          case "View Employees":
+            (async () => {
+              try {
+                const employeesFullDetails = await DBModel.getEmployeesFullDetails();
+                console.log(" ");
+                console.table("EMPLOYEES:", employeesFullDetails);
+                initializeInquirer();
+              } catch (err) {
+                console.log(err);
+              }
+            })();
+            break;
         }
       })
       .catch(err => console.log(err));
