@@ -76,6 +76,13 @@ class DB {
     return this.doQueryParams(query, criteria);
   }
 
+  async getEmployeeInfoFromEmployeeId(criteria) {
+    // IN USE - criteria = [ {e.id: id}, {eee.id: id}]
+    let query =
+      "SELECT e.id, e.first_name, e.last_name, r.title, r.salary, d.name AS department, CONCAT(ee.first_name,' ',ee.last_name) `manager` FROM employee e JOIN role r ON  e.role_id = r.id JOIN department d ON r.department_id = d.id JOIN employee ee ON ee.id = e.manager_id WHERE ? UNION SELECT eee.id, eee.first_name, eee.last_name, rr.title, rr.salary, dd.name AS department, eee.manager_id AS manager FROM employee eee JOIN role rr ON  eee.role_id = rr.id JOIN department dd ON rr.department_id = dd.id WHERE eee.manager_id IS NULL AND ?";
+    return this.doQueryParams(query, criteria);
+  }
+
   async getLastEmployeeAdded() {
     // IN USE
     let query = "SELECT * FROM employee ORDER BY id DESC LIMIT 1";
@@ -99,7 +106,7 @@ class DB {
   async getUtilizedBudgetByDepartement() {
     //IN USE
     let query =
-      "SELECT d.name AS department, ro.budget AS spending_budget FROM department d JOIN (SELECT r.department_id as id, SUM(r.salary) AS budget FROM role r JOIN employee e WHERE e.role_id = r.id GROUP BY id) ro WHERE d.id = ro.id";
+      "SELECT d.name AS department, ro.budget AS spending_budget FROM department d JOIN (SELECT r.department_id as id, SUM(r.salary) AS budget FROM role r JOIN employee e WHERE e.role_id = r.id GROUP BY id) ro WHERE d.id = ro.id ORDER BY spending_budget";
     return this.doQuery(query);
   }
 
@@ -109,11 +116,17 @@ class DB {
     return this.doQueryParams(query, criteria);
   }
 
-  async getManagers() {
-    let query =
-      "SELECT distinct CONCAT(ee.first_name,' ',ee.last_name) `manager` FROM employee e JOIN role r ON  e.role_id = r.id JOIN employee ee ON ee.id = e.manager_id";
-    return this.doQuery(query);
+  async updateManagerOfEmployee(criteria) {
+    // IN USE - criteria = [ { manager_id: ? }, { id: ? }]
+    let query = "UPDATE employee SET ? WHERE ?";
+    return this.doQueryParams(query, criteria);
   }
+
+  // async getManagers() {
+  //   let query =
+  //     "SELECT distinct CONCAT(ee.first_name,' ',ee.last_name) `manager` FROM employee e JOIN role r ON  e.role_id = r.id JOIN employee ee ON ee.id = e.manager_id";
+  //   return this.doQuery(query);
+  // }
 
   // ===================================
   // CORE FUNCTIONS DON'T TOUCH

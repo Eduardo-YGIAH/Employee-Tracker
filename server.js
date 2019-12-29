@@ -273,6 +273,70 @@ con.connect(function(err) {
               })
               .catch(err => console.log(err));
             break;
+          case "Update employee manager":
+            inquirer
+              .prompt([
+                new ListQuestion("employee_to_update_manager", "Select the employee to update manager:", [
+                  ...employeeChoice
+                ]),
+                new ListQuestion("new_manager", "Select the new manager:", [...employeeChoice])
+              ])
+              .then(answer => {
+                (async () => {
+                  try {
+                    const firstNameEmployee = {
+                      first_name: answer.employee_to_update_manager
+                        .toLowerCase()
+                        .trim()
+                        .split(" ")[0]
+                    };
+                    const lastNameEmployee = {
+                      last_name: answer.employee_to_update_manager
+                        .toLowerCase()
+                        .trim()
+                        .split(" ")[1]
+                    };
+                    const employeeId = await DBModel.getEmployeeIdFromName([firstNameEmployee, lastNameEmployee]);
+                    const firstNameManager = {
+                      first_name: answer.new_manager
+                        .toLowerCase()
+                        .trim()
+                        .split(" ")[0]
+                    };
+                    const lastNameManager = {
+                      last_name: answer.new_manager
+                        .toLowerCase()
+                        .trim()
+                        .split(" ")[1]
+                    };
+                    const tempManagerId = await DBModel.getEmployeeIdFromName([firstNameManager, lastNameManager]);
+                    const managerId = tempManagerId.map(id => {
+                      return {
+                        manager_id: id.id
+                      };
+                    });
+                    await DBModel.updateManagerOfEmployee([...managerId, ...employeeId]);
+                    const eCriteria = employeeId.map(id => {
+                      return {
+                        "e.id": id.id
+                      };
+                    });
+                    const eeeCriteria = employeeId.map(id => {
+                      return {
+                        "eee.id": id.id
+                      };
+                    });
+                    const result = await DBModel.getEmployeeInfoFromEmployeeId([...eCriteria, ...eeeCriteria]);
+                    console.log(" ");
+                    console.table("NEW MANAGER ASSIGNED TO EMPLOYEE", result);
+                    initializeInquirer();
+                  } catch (err) {
+                    console.log(err);
+                  }
+                })();
+              })
+              .catch(err => console.log(err));
+            break;
         }
       })
       .catch(err => console.log(err));
