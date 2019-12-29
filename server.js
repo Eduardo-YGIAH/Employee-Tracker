@@ -197,6 +197,18 @@ con.connect(function(err) {
               }
             })();
             break;
+          case "View Employees by Manager":
+            (async () => {
+              try {
+                const employeesByManager = await DBModel.getEmployeesByManager();
+                console.log(" ");
+                console.table("EMPLOYEES:", employeesByManager);
+                initializeInquirer();
+              } catch (err) {
+                console.log(err);
+              }
+            })();
+            break;
         }
       })
       .catch(err => console.log(err));
