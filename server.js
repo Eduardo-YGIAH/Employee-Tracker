@@ -9,6 +9,7 @@ const DB = require("./DB_Class");
 const initialChoices = require("./inquirer_modules/choices");
 const { InputTextQuestion, InputNumberQuestion, ListQuestion } = require("./inquirer_modules/questions");
 const { logger, setCriteria, setId } = require("./helper_functions");
+const figlet = require("figlet");
 
 const port = process.env.PORT;
 
@@ -25,6 +26,11 @@ con.connect(function(err) {
   if (err) throw err;
   console.log("Connected to Database");
   let DBModel = new DB(con);
+
+  figlet("Employee Tracker", (err, data) => {
+    console.log(err || data);
+    console.log(" ");
+  });
 
   (async function initializeInquirer() {
     const currentDepartments = await DBModel.getDepartments();
