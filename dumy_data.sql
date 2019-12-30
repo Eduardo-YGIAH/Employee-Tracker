@@ -12,25 +12,25 @@ VALUES
 
 INSERT INTO role(id, title, salary, department_id)
 VALUES
-(2, "head chef", 4000000, 3),
-(5, "sus-chef", 3000000, 3),
-(6, "comi-chef", 2600000, 3),
-(7, "pot-washer", 1600000, 3),
-(3, "restaurant manager", 4000000, 4),
-(8, "restaurant assistant manager", 3200000, 4),
-(9, "head sommelier", 3800000, 4),
-(10, "assistant sommelier", 2600000, 4),
-(11, "head waiter", 2600000, 4),
-(12, "commi-waiter", 1950000, 4),
-(13, "runner", 1600000, 4),
-(14, "chief-accounting", 3800000, 2),
-(15, "junior-accounting", 2600000, 2),
-(16, "marketing manager", 3800000, 5),
-(17, "junior marketeer", 2600000, 5),
-(18, "housekeeping manager", 26000, 6),
-(19, "housekeeper", 1900000, 6),
-(1, "general manager", 4600000, 1),
-(4, "assistant general manager", 2900000, 1); 
+(2, "head chef", 40000.00, 3),
+(5, "sus-chef", 30000.00, 3),
+(6, "comi-chef", 26000.00, 3),
+(7, "pot-washer", 16000.00, 3),
+(3, "restaurant manager", 40000.00, 4),
+(8, "restaurant assistant manager", 32000.00, 4),
+(9, "head sommelier", 38000.00, 4),
+(10, "assistant sommelier", 26000.00, 4),
+(11, "head waiter", 26000.00, 4),
+(12, "commi-waiter", 19500.00, 4),
+(13, "runner", 16000.00, 4),
+(14, "chief-accounting", 38000.00, 2),
+(15, "junior-accounting", 26000.00, 2),
+(16, "marketing manager", 38000.00, 5),
+(17, "junior marketeer", 26000.00, 5),
+(18, "housekeeping manager", 26000.00, 6),
+(19, "housekeeper", 19000.00, 6),
+(1, "general manager", 46000.00, 1),
+(4, "assistant general manager", 29000.00, 1); 
 
 
 INSERT INTO employee(id, first_name, last_name, role_id, manager_id)

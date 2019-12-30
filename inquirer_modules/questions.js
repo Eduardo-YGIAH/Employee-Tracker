@@ -23,7 +23,7 @@ class InputNumberQuestion {
     this.name = name;
     this.message = message;
     this.validate = answer => {
-      if (!isNumber(Number(answer)) || answer < 100000 || answer > 90000000) {
+      if (!isNumber(Number(answer)) || answer < 1000.0 || answer > 900000.0) {
         return err;
       }
       return true;

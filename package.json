@@ -2,7 +2,7 @@
   "name": "employee-tracker",
   "version": "1.0.0",
   "description": "A Node.js CLI Aplication to track employee-info from different departments.",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "./node_modules/.bin/env-cmd -f ./config/dev.env node server.js"
