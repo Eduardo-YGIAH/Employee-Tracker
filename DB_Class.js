@@ -10,21 +10,21 @@ class DB {
   }
 
   async getDepartment(criteria) {
-    // IN USE
+    // IN USE - criteria = [ { name: departmentName } ] || [ { id: departmentId } ]
     let query = "SELECT * FROM department WHERE ?";
     return this.doQueryParams(query, criteria);
   }
 
-  async getDepartmentId(departmentNameArray) {
-    // IN USE
+  async getDepartmentId(criteria) {
+    // IN USE - criteria = [ { name: departmentName } ]
     let query = "SELECT id FROM department WHERE ?";
-    return this.doQueryParams(query, departmentNameArray);
+    return this.doQueryParams(query, criteria);
   }
 
-  async createDepartment(departmentNameArray) {
-    // IN USE
+  async createDepartment(criteria) {
+    // IN USE - criteria = [ { name: newDepartmentName } ]
     let query = "INSERT INTO department SET ?";
-    return this.doQueryParams(query, departmentNameArray);
+    return this.doQueryParams(query, criteria);
   }
 
   async getRoles() {
@@ -34,19 +34,19 @@ class DB {
   }
 
   async getRole(criteria) {
-    // IN USE
+    // IN USE - criteria = [ { title: roleTitle } ] || [ { id: roleId } ]
     let query = "SELECT * FROM role WHERE ?";
     return this.doQueryParams(query, criteria);
   }
 
-  async addNewRole(roleNameArray) {
-    // IN USE
+  async addNewRole(criteria) {
+    // IN USE - criteria = [ { title: roleTitle, salary: Number, department_id: departmentId  } ]
     let query = "INSERT INTO role SET ?";
-    return this.doQueryParams(query, roleNameArray);
+    return this.doQueryParams(query, criteria);
   }
 
   async getRoleIdFromRoleTitle(criteria) {
-    // IN USE
+    // IN USE - criteria = [ { title: roleTitle } ]
     let query = "SELECT id FROM role WHERE ?";
     return this.doQueryParams(query, criteria);
   }
@@ -58,13 +58,13 @@ class DB {
   }
 
   async addEmployee(criteria) {
-    // IN USE
+    // IN USE - criteria = [ { first_name: firstName, last_name: lastName, role_id: roleId, manager_id: managerId } ] || [ { first_name: firstName, last_name: lastName, role_id: roleId } ]
     let query = "INSERT INTO employee SET ?";
     return this.doQueryParams(query, criteria);
   }
 
   async getEmployeeIdFromName(criteria) {
-    // IN USE
+    // IN USE - criteria = [ { first_name: firstName }, { last_name: lastName } ]
     let query = "SELECT id FROM employee WHERE ? AND ? LIMIT 1";
     return this.doQueryParams(query, criteria);
   }
@@ -111,22 +111,16 @@ class DB {
   }
 
   async updateRoleFromEmployee(criteria) {
-    // IN USE
+    // IN USE - criteria = [ { role_id: roleId }, { first_name: firstName }, { last_name: lastName } ]
     let query = "UPDATE employee SET ? WHERE ? AND ?";
     return this.doQueryParams(query, criteria);
   }
 
   async updateManagerOfEmployee(criteria) {
-    // IN USE - criteria = [ { manager_id: ? }, { id: ? }]
+    // IN USE - criteria = [ { manager_id: managerId }, { id: employeeId }]
     let query = "UPDATE employee SET ? WHERE ?";
     return this.doQueryParams(query, criteria);
   }
-
-  // async getManagers() {
-  //   let query =
-  //     "SELECT distinct CONCAT(ee.first_name,' ',ee.last_name) `manager` FROM employee e JOIN role r ON  e.role_id = r.id JOIN employee ee ON ee.id = e.manager_id";
-  //   return this.doQuery(query);
-  // }
 
   // ===================================
   // CORE FUNCTIONS DON'T TOUCH

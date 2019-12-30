@@ -1,5 +1,4 @@
 const inquirer = require("inquirer");
-// const DB = require("../DB_Class");
 
 const initialChoices = [
   new inquirer.Separator(" = SELCT AN OPTION = "),
@@ -12,7 +11,6 @@ const initialChoices = [
   {
     name: "Add an Employee"
   },
-  //   new inquirer.Separator(" = VIEW EXISTING = "),
   {
     name: "View Departments"
   },
@@ -28,23 +26,22 @@ const initialChoices = [
   {
     name: "View the total utilized budget by department"
   },
-  //   new inquirer.Separator(" = EDIT EXISTING ="),
   {
     name: "Update employee role"
   },
   {
     name: "Update employee manager"
   },
+  {
+    name: "Delete Department"
+  },
+  {
+    name: "Delete Role"
+  },
+  {
+    name: "Delete Employee"
+  },
   new inquirer.Separator(" = END OF OPTIONS = ")
-  // {
-  //   name: "Delete Department"
-  // },
-  // {
-  //   name: "Delete Role"
-  // },
-  // {
-  //   name: "Delete Employee"
-  // }
 ];
 
 module.exports = initialChoices;
