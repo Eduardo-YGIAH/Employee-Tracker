@@ -122,6 +122,56 @@ class DB {
     return this.doQueryParams(query, criteria);
   }
 
+  async numberOfRolesInDepartment(criteria) {
+    // IN USE - criteria = [ { d.name: departmentName } ]
+    let query = "SELECT COUNT(d.name) AS roleCount FROM department d JOIN role r ON r.department_id = d.id WHERE ?";
+    return this.doQueryParams(query, criteria);
+  }
+
+  async showDepartmentRoles(criteria) {
+    // IN USE - criteria = [ { d.name: departmentName } ]
+    let query =
+      "SELECT d.id AS department_id, d.name AS department, r.id AS role_id, r.title AS role_title FROM department d JOIN role r ON r.department_id = d.id WHERE ?";
+    return this.doQueryParams(query, criteria);
+  }
+
+  async deleteDepartment(criteria) {
+    // IN USE - criteria = [ {id: departmentId}]
+    let query = "DELETE FROM department WHERE ?";
+    return this.doQueryParams(query, criteria);
+  }
+
+  async numberOfEmployeesWithRole(criteria) {
+    // IN USE - criteria = [{ r.title: roleTitle }]
+    let query = "SELECT COUNT(e.id) AS employeeCount FROM employee e JOIN role r ON e.role_id = r.id WHERE ?";
+    return this.doQueryParams(query, criteria);
+  }
+
+  async listOfEmployeesByRole(criteria) {
+    //IN USE - criteria = [ { r.title: roleTitle } ]
+    let query =
+      "SELECT r.id AS role_id, r.title AS role_title, e.id AS employee_id, CONCAT(e.first_name,' ',e.last_name) `employee` FROM role r JOIN employee e ON e.role_id = r.id WHERE ?";
+    return this.doQueryParams(query, criteria);
+  }
+
+  async deleteRole(criteria) {
+    // IN USE - criteria = [ { title: roleTitle } ] || [ { id: roleId } ]
+    let query = "DELETE FROM role WHERE ?";
+    return this.doQueryParams(query, criteria);
+  }
+
+  async showManager(criteria) {
+    // IN USE - criteria = [ { first_name: employeeFirstName }, { last_name: employeeLastName } ]
+    let query = "SELECT manager_id FROM employee WHERE ? AND ?";
+    return this.doQueryParams(query, criteria);
+  }
+
+  async deleteEmployee(criteria) {
+    // IN USE - criteria = [ { first_name: employeeFirstName }, { last_name: employeeLastName } ]
+    let query = "DELETE FROM employee WHERE ? AND ?";
+    return this.doQueryParams(query, criteria);
+  }
+
   // ===================================
   // CORE FUNCTIONS DON'T TOUCH
   // ===================================

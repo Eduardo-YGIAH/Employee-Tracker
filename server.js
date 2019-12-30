@@ -8,6 +8,7 @@ const Employee = require("./hr_modules/employee");
 const DB = require("./DB_Class");
 const initialChoices = require("./inquirer_modules/choices");
 const { InputTextQuestion, InputNumberQuestion, ListQuestion } = require("./inquirer_modules/questions");
+const { logger, setCriteria, setId } = require("./helper_functions");
 
 const port = process.env.PORT;
 
@@ -60,13 +61,12 @@ con.connect(function(err) {
                     const newDepartment = await new Department(answer.department_name.toLowerCase().trim());
                     await DBModel.createDepartment([newDepartment]);
                     const result = await DBModel.getDepartment([newDepartment]);
-                    console.log(" ");
-                    console.table("DEPARTMENT ADDED", result);
+                    logger("DEPARTMENT ADDED", result);
+                    initializeInquirer();
                   } catch (err) {
                     console.log(err);
                   }
                 })();
-                initializeInquirer();
               })
               .catch(err => console.log(err));
             break;
@@ -101,13 +101,12 @@ con.connect(function(err) {
                     );
                     await DBModel.addNewRole([newRole]);
                     const result = await DBModel.getRole([{ title: answer.role_title.toLowerCase().trim() }]);
-                    console.log(" ");
-                    console.table("ROLE ADDED", result);
+                    logger("ROLE ADDED", result);
+                    initializeInquirer();
                   } catch (err) {
                     console.log(err);
                   }
                 })();
-                initializeInquirer();
               })
               .catch(err => console.log(err));
             break;
@@ -141,28 +140,15 @@ con.connect(function(err) {
                       const newEmployee = new Employee(firstName, lastName, roleId[0].id);
                       await DBModel.addEmployee(newEmployee);
                       const result = await DBModel.getLastEmployeeAdded();
-                      console.log(" ");
-                      console.table("LAST EMPLOYEE ADDED", result);
+                      logger("LAST EMPLOYEE ADDED", result);
                       initializeInquirer();
                     } else {
-                      const managerIdCriteria1 = {
-                        first_name: answer.employee_manager
-                          .toLowerCase()
-                          .trim()
-                          .split(" ")[0]
-                      };
-                      const managerIdCriteria2 = {
-                        last_name: answer.employee_manager
-                          .toLowerCase()
-                          .trim()
-                          .split(" ")[1]
-                      };
-                      const managerId = await DBModel.getEmployeeIdFromName([managerIdCriteria1, managerIdCriteria2]);
+                      const managerIdCriteria = setCriteria("first_name", answer.employee_manager, "last_name");
+                      const managerId = await DBModel.getEmployeeIdFromName(managerIdCriteria);
                       const newEmployee = new Employee(firstName, lastName, roleId[0].id, managerId[0].id);
                       await DBModel.addEmployee(newEmployee);
                       const result = await DBModel.getLastEmployeeAdded();
-                      console.log(" ");
-                      console.table("LAST EMPLOYEE ADDED", result);
+                      logger("LAST EMPLOYEE ADDED", result);
                       initializeInquirer();
                     }
                   } catch (err) {
@@ -173,21 +159,18 @@ con.connect(function(err) {
               .catch(err => console.log(err));
             break;
           case "View Departments":
-            console.log(" ");
-            console.table("DEPARTMENTS:", currentDepartments);
+            logger("DEPARTMENTS:", currentDepartments);
             initializeInquirer();
             break;
           case "View Roles":
-            console.log(" ");
-            console.table("ROLES:", currentRoles);
+            logger("ROLES:", currentRoles);
             initializeInquirer();
             break;
           case "View Employees":
             (async () => {
               try {
                 const employeesFullDetails = await DBModel.getEmployeesFullDetails();
-                console.log(" ");
-                console.table("EMPLOYEES:", employeesFullDetails);
+                logger("EMPLOYEES:", employeesFullDetails);
                 initializeInquirer();
               } catch (err) {
                 console.log(err);
@@ -198,8 +181,7 @@ con.connect(function(err) {
             (async () => {
               try {
                 const employeesByManager = await DBModel.getEmployeesByManager();
-                console.log(" ");
-                console.table("EMPLOYEES:", employeesByManager);
+                logger("EMPLOYEES:", employeesByManager);
                 initializeInquirer();
               } catch (err) {
                 console.log(err);
@@ -210,8 +192,7 @@ con.connect(function(err) {
             (async () => {
               try {
                 const utilizedBudgetByDepartement = await DBModel.getUtilizedBudgetByDepartement();
-                console.log(" ");
-                console.table("UTILIZED BUDGET BY DEPARTMENT:", utilizedBudgetByDepartement);
+                logger("UTILIZED BUDGET BY DEPARTMENT:", utilizedBudgetByDepartement);
                 initializeInquirer();
               } catch (err) {
                 console.log(err);
@@ -229,42 +210,20 @@ con.connect(function(err) {
                   try {
                     const roleIdCriteria = { title: answer.new_role.toLowerCase().trim() };
                     const roleId = await DBModel.getRoleIdFromRoleTitle(roleIdCriteria);
-                    const roleCriteria = {
-                      role_id: roleId[0].id
-                    };
-                    const firstNameCriteria = {
-                      first_name: answer.employee_to_update_role
-                        .toLowerCase()
-                        .trim()
-                        .split(" ")[0]
-                    };
-                    const lastNameCriteria = {
-                      last_name: answer.employee_to_update_role
-                        .toLowerCase()
-                        .trim()
-                        .split(" ")[1]
-                    };
-                    await DBModel.updateRoleFromEmployee([roleCriteria, firstNameCriteria, lastNameCriteria]);
-                    const firstNameCriteriaCall1 = {
-                      "e.first_name": firstNameCriteria.first_name
-                    };
-                    const lastNameCriteriaCall1 = {
-                      "e.last_name": lastNameCriteria.last_name
-                    };
-                    const firstNameCriteriaCall2 = {
-                      "eee.first_name": firstNameCriteria.first_name
-                    };
-                    const lastNameCriteriaCall2 = {
-                      "eee.last_name": lastNameCriteria.last_name
-                    };
+                    const roleCriteria = setId("role_id", roleId);
+                    const nameCriteria = setCriteria("first_name", answer.employee_to_update_role, "last_name");
+                    await DBModel.updateRoleFromEmployee([...roleCriteria, ...nameCriteria]);
+                    const firstNameCriteria1 = setCriteria("e.first_name", nameCriteria[0].first_name);
+                    const lastNameCriteria1 = setCriteria("e.last_name", nameCriteria[1].last_name);
+                    const firstNameCriteria2 = setCriteria("eee.first_name", nameCriteria[0].first_name);
+                    const lastNameCriteria2 = setCriteria("eee.last_name", nameCriteria[1].last_name);
                     const result = await DBModel.getEmployeeInfoFromEmployeeName([
-                      firstNameCriteriaCall1,
-                      lastNameCriteriaCall1,
-                      firstNameCriteriaCall2,
-                      lastNameCriteriaCall2
+                      firstNameCriteria1,
+                      lastNameCriteria1,
+                      firstNameCriteria2,
+                      lastNameCriteria2
                     ]);
-                    console.log(" ");
-                    console.table("EMPLOYEE ROLE WAS UPDATED:", result);
+                    logger("EMPLOYEE ROLE WAS UPDATED:", result);
                     initializeInquirer();
                   } catch (err) {
                     console.log(err);
@@ -284,51 +243,102 @@ con.connect(function(err) {
               .then(answer => {
                 (async () => {
                   try {
-                    const firstNameEmployee = {
-                      first_name: answer.employee_to_update_manager
-                        .toLowerCase()
-                        .trim()
-                        .split(" ")[0]
-                    };
-                    const lastNameEmployee = {
-                      last_name: answer.employee_to_update_manager
-                        .toLowerCase()
-                        .trim()
-                        .split(" ")[1]
-                    };
-                    const employeeId = await DBModel.getEmployeeIdFromName([firstNameEmployee, lastNameEmployee]);
-                    const firstNameManager = {
-                      first_name: answer.new_manager
-                        .toLowerCase()
-                        .trim()
-                        .split(" ")[0]
-                    };
-                    const lastNameManager = {
-                      last_name: answer.new_manager
-                        .toLowerCase()
-                        .trim()
-                        .split(" ")[1]
-                    };
-                    const tempManagerId = await DBModel.getEmployeeIdFromName([firstNameManager, lastNameManager]);
-                    const managerId = tempManagerId.map(id => {
-                      return {
-                        manager_id: id.id
-                      };
-                    });
+                    const employee = setCriteria("first_name", answer.employee_to_update_manager, "last_name");
+                    const employeeId = await DBModel.getEmployeeIdFromName(employee);
+                    const managerName = setCriteria("first_name", answer.new_manager, "last_name");
+                    const tempManagerId = await DBModel.getEmployeeIdFromName(managerName);
+                    console.log(tempManagerId);
+                    const managerId = setId("manager_id", tempManagerId);
                     await DBModel.updateManagerOfEmployee([...managerId, ...employeeId]);
-                    const eCriteria = employeeId.map(id => {
-                      return {
-                        "e.id": id.id
-                      };
-                    });
-                    const eeeCriteria = employeeId.map(id => {
-                      return {
-                        "eee.id": id.id
-                      };
-                    });
+                    const eCriteria = setId("e.id", employeeId);
+                    const eeeCriteria = setId("eee.id", employeeId);
                     const result = await DBModel.getEmployeeInfoFromEmployeeId([...eCriteria, ...eeeCriteria]);
-                    console.log(" ");
-                    console.table("NEW MANAGER ASSIGNED TO EMPLOYEE", result);
+                    logger("NEW MANAGER ASSIGNED TO EMPLOYEE", result);
+                    initializeInquirer();
+                  } catch (err) {
+                    console.log(err);
+                  }
+                })();
+              })
+              .catch(err => console.log(err));
+            break;
+          case "Delete Department":
+            inquirer
+              .prompt([
+                new ListQuestion("delete_department", "Select the Department you would like to delete:", [
+                  ...currentDepartments
+                ])
+              ])
+              .then(answer => {
+                (async () => {
+                  try {
+                    const departmentNameCriteria = [{ name: answer.delete_department.toLowerCase().trim() }];
+                    const countRoles = await DBModel.numberOfRolesInDepartment(departmentNameCriteria);
+
+                    if (countRoles[0].roleCount > 0) {
+                      const rolesInDepartment = await DBModel.showDepartmentRoles(departmentNameCriteria);
+                      logger("DEPARTMENT HAS ROLES AND CANNOT BE DELETED", rolesInDepartment);
+                    } else {
+                      const departmentId = await DBModel.getDepartmentId(departmentNameCriteria);
+                      const deletedDepartment = await DBModel.getDepartment(departmentId);
+                      await DBModel.deleteDepartment(departmentId);
+                      logger("DELETED DEPARTMENT", deletedDepartment);
+                    }
+                    initializeInquirer();
+                  } catch (err) {
+                    console.log(err);
+                  }
+                })();
+              })
+              .catch(err => console.log(err));
+            break;
+          case "Delete Role":
+            inquirer
+              .prompt([new ListQuestion("delete_role", "Select the Role ro delete", [...rolesChoice])])
+              .then(answer => {
+                (async () => {
+                  try {
+                    const roleTitleCriteria = [{ title: answer.delete_role.toLowerCase().trim() }];
+                    const countEmployees = await DBModel.numberOfEmployeesWithRole(roleTitleCriteria);
+                    if (countEmployees[0].employeeCount > 0) {
+                      const employeesWithRole = await DBModel.listOfEmployeesByRole(roleTitleCriteria);
+                      logger("YOU CANNOT DELETE THIS ROLE WHILE HAVING EMPLOYEES WITH IT", employeesWithRole);
+                    } else {
+                      const deletedRole = await DBModel.getRole(roleTitleCriteria);
+                      await DBModel.deleteRole(roleTitleCriteria);
+                      logger("DELETED ROLE", deletedRole);
+                    }
+                    initializeInquirer();
+                  } catch (err) {
+                    console.log(err);
+                  }
+                })();
+              })
+              .catch(err => console.log(err));
+            break;
+          case "Delete Employee":
+            inquirer
+              .prompt([new ListQuestion("delete_employee", "Select the employee to delete:", [...employeeChoice])])
+              .then(answer => {
+                (async () => {
+                  try {
+                    const employeeToDeleteCriteria = setCriteria("first_name", answer.delete_employee, "last_name");
+                    const employeeToDeleteCriteriaE = setCriteria(
+                      "e.first_name",
+                      answer.delete_employee,
+                      "e.last_name"
+                    );
+                    const employeeToDeleteCriteriaEee = setCriteria(
+                      "eee.first_name",
+                      answer.delete_employee,
+                      "eee.last_name"
+                    );
+                    const employeeInfo = await DBModel.getEmployeeInfoFromEmployeeName([
+                      ...employeeToDeleteCriteriaE,
+                      ...employeeToDeleteCriteriaEee
+                    ]);
+                    await DBModel.deleteEmployee(employeeToDeleteCriteria);
+                    logger("EMPLOYEE DELETED", employeeInfo);
                     initializeInquirer();
                   } catch (err) {
                     console.log(err);

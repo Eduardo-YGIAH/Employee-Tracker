@@ -1,7 +1,4 @@
-//FUNCTION TO VALIDATE NUMBERS
-function isNumber(value) {
-  return typeof value === "number" && isFinite(value);
-}
+const { isNumber } = require("../helper_functions");
 
 //=======================
 //CLASSES FOR QUESTIONS BY TYPE
